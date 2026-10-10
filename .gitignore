@@ -1,0 +1,23 @@
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+data/interim/
+data/processed/
+data/features/
+models/baselines/
+models/final/
+config/data_paths.json
+
+# Exclude datasets and generated outputs
+/data/
+/models/
+/results/
+
+# Exclude environment secrets
+.env
+
+# Exclude large data and model files
+*.csv
+*.parquet
+*.pkl
+*.joblib
