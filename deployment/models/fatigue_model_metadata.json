@@ -1,0 +1,50 @@
+{
+    "model_type": "XGBRegressor",
+    "target": "Estimated_Fatigue",
+    "window_seconds": 180,
+    "expected_readings": 360,
+    "sampling_interval_seconds": 0.5,
+    "feature_columns": [
+        "HR_Mean",
+        "HR_Median",
+        "HR_STD",
+        "HR_P10",
+        "HR_P90",
+        "HRV_Mean",
+        "HRV_Median",
+        "HRV_STD",
+        "HRV_P10",
+        "HRV_P90",
+        "Temperature_Mean",
+        "Temperature_Median",
+        "Temperature_STD",
+        "Temperature_P10",
+        "Temperature_P90",
+        "Acceleration_Mean",
+        "Acceleration_Median",
+        "Acceleration_STD",
+        "Acceleration_P10",
+        "Acceleration_P90",
+        "Gyroscope_Mean",
+        "Gyroscope_Median",
+        "Gyroscope_STD",
+        "Gyroscope_P10",
+        "Gyroscope_P90"
+    ],
+    "fatigue_thresholds": {
+        "Low": [
+            0,
+            4
+        ],
+        "Moderate": [
+            4,
+            7
+        ],
+        "High": [
+            7,
+            10
+        ]
+    },
+    "hrv_cleaning": "Original features without experimental HRV filtering",
+    "gyroscope": "Absolute value of gyroscope X axis"
+}
