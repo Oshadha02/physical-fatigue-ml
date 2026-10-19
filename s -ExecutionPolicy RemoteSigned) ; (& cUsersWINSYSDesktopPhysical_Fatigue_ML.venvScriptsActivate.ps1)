@@ -1,0 +1,55 @@
+2026-10-17 | create frontend from streamlit
+deployment/api.py
+deployment/app.py
+deployment/predict.py
+
+2026-10-17 | Train window-based XGBoost fatigue detection model
+deployment/models/fatigue_model_metadata.json
+deployment/models/fatigue_xgboost.json
+notebooks/05_model_training.ipynb
+notebooks/05b_window_based_xgboost.ipynb
+
+2026-10-16 | complete feature engineering
+notebooks/04_feature_engineering.ipynb
+
+2026-10-16 | Complete data preprocessing
+notebooks/03_preprocessing.ipynb
+
+2026-10-15 | Complete EDA and sensor outlier analysis
+notebooks/02_eda.ipynb
+
+2026-10-15 | Complete dataset understanding and quality analysis
+notebooks/01_dataset_understanding.ipynb
+
+2026-10-10 | Initial ML project setup and dataset exploration
+.gitignore
+README.md
+deployment/api.py
+notebooks/01_dataset_understanding.ipynb
+notebooks/02_eda.ipynb
+notebooks/03_preprocessing.ipynb
+notebooks/04_feature_engineering.ipynb
+notebooks/05_model_training.ipynb
+notebooks/06_model_evaluation.ipynb
+notebooks/07_explainable_ai.ipynb
+requirements.txt
+src/__init__.py
+src/data/__init__.py
+src/data/create_labels.py
+src/data/load_dataset.py
+src/data/preprocessing.py
+src/data/quality_checks.py
+src/evaluation/__init__.py
+src/evaluation/evaluate.py
+src/evaluation/validation.py
+src/features/__init__.py
+src/features/extract_features.py
+src/features/sensor_fusion.py
+src/models/__init__.py
+src/models/hyperparameter_tuning.py
+src/models/predict.py
+src/models/train.py
+src/xai/__init__.py
+src/xai/shap_analysis.py
+tests/test_data_leakage.py
+tests/test_preprocessing.py
