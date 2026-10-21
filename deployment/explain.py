@@ -1,130 +1,115 @@
 
 from functools import lru_cache
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import shap
-from xgboost import XGBRegressor
 
-
-# Locate the saved XGBoost model
-MODEL_PATH = (
-    Path(__file__).resolve().parent
-    / "models"
-    / "fatigue_xgboost.json"
-)
+# Use the XGBoost model
+from predict import model, SENSOR_COLUMNS
 
 
 @lru_cache(maxsize=1)
 def load_shap_explainer():
-    # Load the same model used by the prediction backend
-    model = XGBRegressor()
-    model.load_model(str(MODEL_PATH))
-
+    # Create a SHAP explainer for the XGBoost model
     return shap.TreeExplainer(model)
 
 
 def explain_prediction(features, worker_id="Worker"):
-    # Validate the extracted feature data
-    if not isinstance(features, pd.DataFrame) or len(features) != 1:
+    # Validate the flattened input
+    if not isinstance(features, pd.DataFrame):
+        raise ValueError("Features must be a DataFrame.")
+
+    if features.shape != (1, 1800):
         raise ValueError(
-            "Exactly one row of extracted features is required."
+            "Expected one sample containing 1,800 values."
         )
 
-    # Calculate SHAP values for the prediction
-    explainer = load_shap_explainer()
-    shap_result = explainer(features)
+    # Convert the features into an array
+    feature_array = features.to_numpy(dtype=np.float32)
 
+    # Calculate SHAP values
+    explainer = load_shap_explainer()
+    shap_result = explainer(feature_array)
     shap_values = shap_result.values[0]
 
-    # Group the 25 features into five sensor categories
+    # Five sensor groups
     sensor_groups = [
         {
             "name": "Heart Rate",
-            "prefix": "HR",
+            "column": "HR_Processed",
             "unit": "BPM",
             "description": "heart rate",
         },
         {
             "name": "Heart Rate Variability",
-            "prefix": "HRV",
+            "column": "HRV",
             "unit": "",
             "description": "heart rate variability",
         },
         {
             "name": "Skin Temperature",
-            "prefix": "Temperature",
+            "column": "Temperature",
             "unit": "°C",
             "description": "skin temperature",
         },
         {
             "name": "Body Movement",
-            "prefix": "Acceleration",
+            "column": "Acceleration_Magnitude",
             "unit": "g",
             "description": "acceleration magnitude",
         },
         {
             "name": "Gyroscope Movement",
-            "prefix": "Gyroscope",
+            "column": "Gyroscope_Proxy",
             "unit": "°/s",
-            "description": "absolute gyroscope X-axis reading",
+            "description": "gyroscope movement",
         },
     ]
 
     explanations = []
 
     for sensor in sensor_groups:
-        prefix = sensor["prefix"]
+        # Find this sensor's position among the five signals
+        position = SENSOR_COLUMNS.index(sensor["column"])
 
-        # Find the five features belonging to this sensor
-        indices = [
-            i for i, column in enumerate(features.columns)
-            if column.startswith(prefix + "_")
-        ]
+        # Get its 360 readings from the flattened input
+        indices = np.arange(position, 1800, 5)
+        readings = feature_array[0, indices]
 
-        # Calculate combined SHAP contribution
+        # Combine SHAP values for this sensor
         contribution = float(np.sum(shap_values[indices]))
 
-        # Read the original statistical feature values
-        mean_value = features.iloc[0][f"{prefix}_Mean"]
-        median_value = features.iloc[0][f"{prefix}_Median"]
+        # Calculate average and median sensor readings
+        mean_value = float(np.mean(readings))
+        median_value = float(np.median(readings))
 
         unit = sensor["unit"]
         description = sensor["description"]
 
-        # Describe the sensor readings
-        if pd.isna(mean_value):
-            reading_text = (
-                f"{worker_id} had no valid {description} "
-                "readings in this 3-minute window."
-            )
-        else:
-            reading_text = (
-                f"{worker_id} had an average {description} "
-                f"of {mean_value:.2f} {unit} "
-                f"and a median of {median_value:.2f} {unit}."
-            )
+        reading_text = (
+            f"{worker_id} had an average {description} "
+            f"of {mean_value:.2f} {unit} "
+            f"and a median of {median_value:.2f} {unit}."
+        )
 
-        # Describe the model's SHAP contribution
+        # Explain how this sensor influenced the prediction
         if contribution > 0.005:
             impact_text = (
-                f"These features increased the model's "
-                f"predicted fatigue score by "
-                f"{contribution:.2f} points."
+                "These readings pushed the model's "
+                "fatigue estimate higher."
             )
 
         elif contribution < -0.005:
             impact_text = (
-                f"These features decreased the model's "
-                f"predicted fatigue score by "
-                f"{abs(contribution):.2f} points."
+                "These readings pushed the model's "
+                "fatigue estimate lower."
             )
 
         else:
             impact_text = (
-                "These features had almost no net effect "
-                "on the model's predicted fatigue score."
+                "These readings had almost no net effect "
+                "on the model's fatigue estimate."
             )
 
         explanations.append({
@@ -134,7 +119,7 @@ def explain_prediction(features, worker_id="Worker"):
             "importance": abs(contribution),
         })
 
-    # Show the strongest net sensor contributions first
+    # Show the strongest net contributions first
     explanations.sort(
         key=lambda item: item["importance"],
         reverse=True

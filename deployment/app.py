@@ -24,9 +24,9 @@ st.divider()
 # Step 1: Upload sensor data
 st.subheader("1. Upload Sensor Data")
 
-# Optional worker identifier
+# worker id
 worker_id = st.text_input(
-    "Worker ID (Optional)",
+    "Worker ID ",
     placeholder="Example: P21"
 )
 
@@ -85,7 +85,6 @@ if uploaded_file is not None:
                 with st.spinner("Analyzing sensor readings..."):
                     result = predict_fatigue(sensor_data)
 
-                score = result["fatigue_score"]
                 level = result["fatigue_level"]
 
                 # Step 3: Display prediction results
@@ -94,29 +93,38 @@ if uploaded_file is not None:
 
                 st.write(f"**Worker:** {worker_name}")
 
-                col1, col2 = st.columns(2)
 
-                with col1:
-                    st.metric(
-                        "Fatigue Score",
-                        f"{score}/10"
-                    )
 
-                with col2:
-                    st.metric(
-                        "Fatigue Level",
-                        level
-                    )
+                
+                # Display fatigue level in the center
+                colors = {
+                    "Low": "#beb338",
+                    "Moderate": "#16a34a",
+                    "High": "#dc2626"
+                }
 
-                # Display fatigue status
-                if level == "Low":
-                    st.success("Low Fatigue Detected")
+                level_color = colors.get(level, "#16a34a")
 
-                elif level == "Moderate":
-                    st.warning("Moderate Fatigue Detected")
+                st.markdown(
+                    f"""
+                    <div style="text-align: center; padding: 30px;">
+                        <h3>Fatigue Level</h3>
+                        <div style="
+                            background-color: {level_color};
+                            color: white;
+                            font-size: 42px;
+                            font-weight: bold;
+                            padding: 25px;
+                            border-radius: 12px;
+                        ">
+                            {level}
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
 
-                else:
-                    st.error("High Fatigue Detected")
+                
 
                 # Step 4: Natural-language Explainable AI
                 st.divider()
@@ -144,23 +152,6 @@ if uploaded_file is not None:
 
                     st.write("")
 
-                # Final explanation
-                st.divider()
-                st.markdown("### Overall Conclusion")
-
-                st.write(
-                    f"{worker_name} received a predicted "
-                    f"physical fatigue score of {score}/10, "
-                    f"corresponding to {level.lower()} fatigue."
-                )
-
-                st.write(
-                    "This result was calculated using "
-                    "heart rate, heart rate variability, "
-                    "skin temperature, acceleration, "
-                    "and gyroscope features collected "
-                    "over a 3-minute window."
-                )
 
 
     except Exception as error:
